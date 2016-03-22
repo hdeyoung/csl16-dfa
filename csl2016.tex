@@ -1,0 +1,76 @@
+% arara: pdflatex
+% arara: bibtex
+% arara: pdflatex
+% arara: pdflatex
+\documentclass[a4paper,USenglish]{lipics-v2016}
+%for section-numbered lemmas etc., use "numberwithinsect"
+ 
+\usepackage{microtype}%if unwanted, comment out or use option "draft"
+
+%\graphicspath{{./graphics/}}%helpful if your graphic files are in another directory
+
+\bibliographystyle{plainurl}% the recommended bibstyle
+
+% Author macros::begin %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{A sample title\footnote{This work was partially supported by someone.}}
+\titlerunning{A Sample Running Title}% optional
+
+\author{Henry DeYoung}
+\author{Frank Pfenning}
+\affil{Computer Science Department, Carnegie Mellon University, Pittsburgh, Pennsylvania, USA\\
+  \texttt{\{hdeyoung,fp\}@cs.cmu.edu}}
+\authorrunning{H. DeYoung and F. Pfenning}
+
+\Copyright{Henry DeYoung and Frank Pfenning}%LIPIcs license is "CC-BY";  http://creativecommons.org/licenses/by/3.0/
+
+\subjclass{Dummy classification -- please refer to \url{http://www.acm.org/about/class/ccs98-html}}% mandatory: Please choose ACM 1998 classifications from http://www.acm.org/about/class/ccs98-html . E.g., cite as "F.1.1 Models of Computation". 
+\keywords{Dummy keyword -- please provide 1--5 keywords}% mandatory: Please provide 1-5 keywords
+% Author macros::end %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Editor-only macros:: begin (do not touch as author)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\EventEditors{John Q. Open and Joan R. Acces}
+\EventNoEds{2}
+\EventLongTitle{42nd Conference on Very Important Topics (CVIT 2016)}
+\EventShortTitle{CVIT 2016}
+\EventAcronym{CVIT}
+\EventYear{2016}
+\EventDate{December 24--27, 2016}
+\EventLocation{Little Whinging, United Kingdom}
+\EventLogo{}
+\SeriesVolume{42}
+\ArticleNo{23}
+% Editor-only macros::end %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent convallis orci arcu, eu mollis dolor. Aliquam eleifend suscipit lacinia. Maecenas quam mi, porta ut lacinia sed, convallis ac dui. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse potenti. 
+ \end{abstract}
+
+\section{Introduction}\label{sec:introduction}
+
+
+\begin{lstlisting}[caption={Useless code},label=list:8-6,captionpos=t,float,abovecaptionskip=-\medskipamount]
+for i:=maxint to 0 do 
+begin 
+    j:=square(root(i));
+end;
+\end{lstlisting}
+
+
+\section{Conclusion}\label{sec:conclusion}
+
+\subparagraph*{Acknowledgements.}
+
+We want to thank \dots
+
+
+%%
+%% Bibliography
+%%
+
+\bibliography{csl2016}
+
+\end{document}
