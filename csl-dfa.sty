@@ -1,0 +1,242 @@
+%% Henry DeYoung and Frank Pfenning
+%% March 22, 2016
+\RequirePackage{expl3}
+\ProvidesExplPackage
+  {csl-dfa}
+  {2016/03/22}
+  {1.0}
+  {Macros for CSL 2016 paper on Curry-Howard for automata}
+
+
+\RequirePackage { xparse } % for \NewDocumentCommand
+\RequirePackage { mathtools } % for \Coloneqq, etc.
+\PassOptionsToPackage { heavycircles } { stmaryrd }
+\RequirePackage { stmaryrd } % for \oplus, etc.
+\RequirePackage { proof-dashed } % for \infer, etc.
+\RequirePackage { mathpartir }
+
+
+%% \RequirePackage { tikz }
+%% 
+%% \ExplSyntaxOff
+%% \usetikzlibrary{positioning,graphs,quotes,automata}
+%% \ExplSyntaxOn
+
+
+
+\RequirePackage { acro }
+
+\DeclareAcronym { DFA } {
+  short = DFA,
+  long = deterministic~finite~automaton,
+  long-plural-form = deterministic~finite~automata
+}
+
+%% \DeclareAcronym { SST } {
+%%   short = SST,
+%%   short-indefinite = an,
+%%   long = subsequential~transducer
+%% }
+
+
+%% Logic
+
+% Sequent: \seq{\lctx |- A}
+\NewDocumentCommand \seq { >{ \SplitArgument{1}{|-} } m }
+  { \seq:nn #1 }
+\cs_new:Npn \seq:nn #1#2 {
+  \seq_set_split:Nnn \l_tmpa_seq {;} {#1}
+  \seq_use:Nn \l_tmpa_seq { \mathrel{;} }
+  \vdash #2
+}
+
+\NewDocumentCommand \forallseq { m m }
+  { \forallseq:nn {#1} {#2} }
+\cs_new:Npn \forallseq:nn #1#2 {
+  \forall #1 \colon \enskip #2
+}
+
+% Propositions
+
+% Additive disjunction: Either A \plus B or \plus*[a \in \Sigma]{a:A_a}
+\NewDocumentCommand \plus { s }
+  { \IfBooleanTF {#1} { \plus_star } { \plus: } }
+\NewDocumentCommand \plus_star { O{} m }
+  { \plus:nn {#1} {#2} }
+\cs_new:Npn \plus: { \oplus }
+\cs_new:Npn \plus:nn #1#2 {
+  \mathord{\plus:} \sb{#1} \lbrace #2 \rbrace
+}
+
+% Multiplicative unit
+\NewDocumentCommand \tensor { } { \tensor: }
+\cs_new:Npn \tensor: { \otimes }
+
+% Multiplicative unit
+\NewDocumentCommand \one { } { \one: }
+\cs_new:Npn \one: { \mathord{\mathbf{1}} }
+
+% Recursive type: \indtype{X.A}
+\NewDocumentCommand \indtype { >{ \SplitArgument{1}{.} } m }
+  { \indtype:nn #1 }
+\cs_new:Npn \indtype:nn #1#2 { \mu #1 . #2 }
+
+% Shifts
+\NewDocumentCommand \down { } { \down: }
+\cs_new:Npn \down: { \mathord{\downarrow} }
+
+\NewDocumentCommand \up { } { \up: }
+\cs_new:Npn \up: { \mathord{\uparrow} }
+
+
+% Contexts
+
+\NewDocumentCommand \lctx { } { \lctx: }
+\cs_new:Npn \lctx: { \Delta }
+
+\NewDocumentCommand \lctxe { } { \lctxe: }
+\cs_new:Npn \lctxe: { \cdot }
+
+\NewDocumentCommand \rfoc { m } { \rfoc:n {#1} }
+\cs_new:Npn \rfoc:n #1 { [ #1 ] }
+
+\NewDocumentCommand \lfoc { m } { \lfoc:n {#1} }
+\cs_new:Npn \lfoc:n #1 { [ #1 ] }
+
+
+% Proof terms (processes)
+
+\NewDocumentCommand \keywordfont { m } { \keyword_font:n {#1} }
+\cs_new:Npn \keyword_font:n #1 { \mathsf{#1} }
+
+\NewDocumentCommand \aseq { >{ \SplitArgument{1}{|-} } m }
+  { \aseq:nn #1 }
+\cs_new:Npn \aseq:nn #1#2 {
+  \seq_set_split:Nnn \l_tmpa_seq {;} {#1}
+  \seq_use:Nn \l_tmpa_seq { \mathrel{;} }
+  \vdash #2
+}
+
+\NewDocumentCommand \spawn { >{ \SplitArgument{1}{;} } m }
+  { \spawn:nn #1 }
+\cs_new:Npn \spawn:nn #1#2 {
+  \keyword_font:n { spawn } \mathpunct{} #1 \mathpunct{;} #2
+}
+
+% \caseL[\Sigma]{\isym{a} => P_a | \isym{b} => P_b | \eow => Q}
+\NewDocumentCommand \caseL { O{} m } { \caseL:nn {#1} {#2} }
+\cs_new:Npn \caseL:nn #1#2 { \case:Nnn L {#1} {#2} }
+\cs_new:Npn \case:Nnn #1#2#3 { \case:nnn { case#1 } {#2} {#3} }
+\cs_new:Npn \case:nnn #1#2#3 {
+  \keyword_font:n {#1}
+  \sb{#2}
+  (
+  \seq_set_split:Nnn \l_tmpa_seq {|} {#3}
+  \seq_clear:N \l_tmpb_seq
+  \seq_map_inline:Nn \l_tmpa_seq
+    { \seq_put_right:Nn \l_tmpb_seq { \case_arm:n {##1} } }
+  \seq_use:Nn \l_tmpb_seq { \mathrel{\talloblong} }
+  )
+}
+\cs_new:Npn \case_arm:n #1 { \case_arm:w #1 \q_stop }
+\cs_new:Npn \case_arm:w #1=>#2\q_stop { #1 \mathbin{\Rightarrow} #2 }
+
+% \selectR{\ell; P}
+\NewDocumentCommand \selectR { >{ \SplitArgument{1}{;} } m }
+  { \selectR:nn #1 }
+\cs_new:Npn \selectR:nn #1#2 { \select:Nnn R {#1} {#2} }
+\cs_new:Npn \select:Nnn #1#2#3 { \send:nnn { select#1 } {#2} {#3} }
+\cs_new:Npn \send:nnn #1#2#3 {  \keyword_font:n { #1 } \mathpunct{} #2 \mathpunct{;} #3 }
+
+\NewDocumentCommand \closeR {} { \closeR: }
+\cs_new:Npn \closeR: { \keyword_font:n { closeR } }
+\NewDocumentCommand \waitL { m } { \waitL:n {#1} }
+\cs_new:Npn \waitL:n #1 { \keyword_font:n { waitL } \mathpunct{;} #1 }
+
+\NewDocumentCommand \reduces { s }
+  { \IfBooleanTF {#1} \reduces_star: \reduces: }
+\cs_new:Npn \reduces: { \longrightarrow }
+\cs_new:Npn \reduces_star: { \reduces: ^{*} }
+
+
+% Inference rule labels
+
+\NewDocumentCommand \rrule { O{} m } { \rrule:nn {#2} {#1} }
+\cs_new:Npn \rrule:nn #1#2 { \rule_label:nnn {#1} {R} {#2} }
+
+\NewDocumentCommand \lrule { O{} m } { \lrule:nn {#2} {#1} }
+\cs_new:Npn \lrule:nn #1#2 { \rule_label:nnn {#1} {L} {#2} }
+
+\NewDocumentCommand \jrule { O{} m } { \jrule:nn {#2} {#1} }
+\cs_new:Npn \jrule:nn #1#2 { \rule_label:nnn {} {#1} {#2} }
+
+\cs_new:Npn \rule_label:nnn #1#2#3 {
+  \mathord{#1} \text{\normalfont\scshape \MakeLowercase{#2} } #3
+}
+
+
+% Miscellaneous
+
+\NewDocumentCommand \kay { } { \kay: }
+\cs_new:Npn \kay: { k }
+
+\newcommand*{\vocab}[1]{\textit{#1}}
+
+
+% Automata
+
+\NewDocumentCommand \emp { } { \emp: }
+\cs_new:Npn \emp: { \epsilon }
+
+\NewDocumentCommand \isym { m } { \isym:n {#1} }
+\cs_new:Npn \isym:n #1 { \sym:n {#1} }
+\NewDocumentCommand \osym { m } { \osym:n {#1} }
+\cs_new:Npn \osym:n #1 { \sym:n {#1} }
+\cs_new:Npn \sym:n #1 { \mathtt {#1} }
+
+\NewDocumentCommand \eow { } { \eow: }
+\cs_new:Npn \eow: { \text { \normalfont \ttfamily \$ } }
+
+\NewDocumentCommand \acc { } { \acc: }
+\cs_new:Npn \acc: { \osym { acc } }
+\NewDocumentCommand \rej { } { \rej: }
+\cs_new:Npn \rej: { \osym { rej } }
+
+\NewDocumentCommand \state { m } { \state:n {#1} }
+\cs_new:Npn \state:n #1 { \mathit {#1} }
+
+\NewDocumentCommand \namedpf { m } { \namedpf:n {#1} }
+\cs_new:Npn \namedpf:n #1 { \mathtt {#1} }
+
+\DeclarePairedDelimiter \length { \lvert } { \rvert }
+
+\NewDocumentCommand \pow { m } { \pow:n {#1} }
+\cs_new:Npn \pow:n #1 { \mathcal{P} ( #1 ) }
+
+\NewDocumentCommand \List { O{} } { \List:n {#1} }
+\cs_new:Npn \List:n #1 { \mathtt { List } \sb{#1} }
+
+\NewDocumentCommand \Tape { O{} } { \Tape:n {#1} }
+\cs_new:Npn \Tape:n #1 { \mathtt { String } \sb{#1} }
+
+\NewDocumentCommand \Ans { } { \Ans: }
+\cs_new:Npn \Ans: { \mathtt { Ans } }
+
+\NewDocumentCommand \wdpf { m } { \wdpf:n {#1} }
+\cs_new:Npn \wdpf:n #1 { #1 ^{ \sharp } }
+
+\NewDocumentCommand \pfwd { m } { \pfwd:n {#1} }
+\cs_new:Npn \pfwd:n #1 { #1 ^{ \flat } }
+
+\NewDocumentCommand \dfapf { m } { \dfapf:n {#1} }
+\cs_new:Npn \dfapf:n #1 { \wdpf:n {#1} }
+
+\NewDocumentCommand \pfdfa { m } { \pfdfa:n {#1} }
+\cs_new:Npn \pfdfa:n #1 { \pfwd:n {#1} }
+
+
+\NewDocumentCommand \ttbool { } { \ttbool: }
+\cs_new:Npn \ttbool: { \keyword_font:n { true } }
+
+\NewDocumentCommand \ffbool { } { \ffbool: }
+\cs_new:Npn \ffbool: { \keyword_font:n { false } }
