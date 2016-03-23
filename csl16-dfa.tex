@@ -64,6 +64,83 @@ end;
 \end{lstlisting}
 
 
+\section{Proofs as \aclp*{DFA}}\label{sec:proofs-as-dfas}
+
+\subsection{\Aclp*{DFA}}\label{sec:dfas}
+
+A \vocab{deterministic finite automaton}~(\acs{DFA}) $M$ is a 5-tuple $(Q, \Sigma, \delta, q_0, F)$ where
+$Q$ is a finite set of states,
+$\Sigma$ is a finite alphabet of input symbols $a$,
+$\delta\colon Q \times \Sigma \to Q$ is a total transition function,
+% function that describes the state transitions upon reading an input letter,
+$q_0 \in Q$ is the initial state, and
+$F \subseteq Q$ is a set of accepting states.
+% For convenience in speaking of \emph{the} language accepted by the \ac{DFA} $M$, it is typical to also fix a starting state, $q_0 \in Q$, for all computations of $M$. % the \ac{DFA} $M$.
+% We choose not to do so.
+The set of all finite strings over alphabet $\Sigma$ is written as $\Sigma^*$, with $\emp$ denoting the empty string.
+
+A \vocab{computation} of % the automaton
+$M$ on the input string $w = a_1 a_2 \dotsb a_n \in \Sigma^*$
+is a sequence of states $q_0, q_1, \dots, q_n$ such that $\delta(q_i, a_{i+1}) = q_{i+1}$ for each $0 \leq i < n$.
+% The \ac{DFA}
+$M$ is said to \vocab{accept} string $w$ if there exists a computation on $w$ that ends in an accepting state, $q_n \in F$; otherwise, $M$ is said to \vocab{reject} string $w$.
+% That computation is an \vocab{accepting computation} if $q_n$ is an accepting state, \ie, if $q_n \in F$; otherwise it is a \vocab{rejecting computation}.
+
+Alternatively, one may extend the transition function $\delta$, which operates on symbols, to a function $\delta^*\colon Q \times \Sigma^* \to Q$, which operates on strings.
+% the lifting of the transition function $\delta$ from letters to words, by induction on the length of the input word:
+\begin{align*}
+  \delta^*(q, \emp) &= q \\
+  \delta^*(q, a w') &= \delta^*(q', w') \text{\,, where $\delta(q, a) = q'$}
+\end{align*}
+It's straightforward to show, by induction on the length of the string $w$, that $M$ accepts $w$ if and only if $\delta^*(q_0, w) \in F$.
+
+\begin{figure}
+  \begin{tikzpicture}
+    \graph [grow right sep=2em, math nodes, nodes={state}] {
+      0 / "\mathclap{\state{even}}" [initial, initial text=, accepting]
+       -> [bend left, "$\isym{b}$"]
+      1 / "\mathclap{\smash{\state{odd}}\vphantom{\state{even}}}"
+       -> [bend left, "$\isym{b}$"]
+      0;
+      %
+      0 -> [loop above, "$\isym{a}$"] 0;
+      1 -> [loop above, "$\isym{a}$"] 1;
+    };
+  \end{tikzpicture}
+  %
+  % \begin{gather*}
+  %   even = \caseL{
+  %            \isym{a} => even
+  %          | \isym{b} => odd
+  %          | \eow => \waitL{\selectR{\acc ; \closeR}}}
+  %   %
+  %   \\
+  %   %
+  %   odd = \caseL{
+  %           \isym{a} => odd
+  %         | \isym{b} => even
+  %         | \eow => \waitL{\selectR{\rej ; \closeR}}}
+  % \end{gather*}
+  \caption{The transition diagram for \iac*{DFA} that recognizes strings over the alphabet $\{\isym{a}, \isym{b}\}$ that contain an even number of $\isym{b}$s.\label{fig:dfa-example}}
+\end{figure}
+%
+\begin{example}
+\Cref{fig:dfa-example} shows the transition diagram for \iac{DFA} that recognizes finite strings over the alphabet $\Sigma = \{\isym{a}, \isym{b}\}$ that contain an even number of $\isym{b}$s.
+The starting state, as indicated by the unlabeled arrow, is $\state{even}$; it is also an accepting state, as indicated by its doubled outline.
+% corresponds to having read an even number of $\isym{b}$s so far; likewise, the state $\state{odd}$ corresponds to having read an odd number of $\isym{b}$s so far.
+This \ac{DFA} accepts the string $\isym{b} \isym{a} \isym{b}$ because there is a path corresponding to $\isym{b} \isym{a} \isym{b}$ from the starting state, $\state{even}$, to an accepting state; % , namely $\state{even}$.
+this \ac{DFA} rejects the string $\isym{b} \isym{a}$ because the path corresponding to $\isym{b} \isym{a}$ from the starting state ends at a rejecting state.
+\end{example}
+
+Although some definitions of \acp{DFA} allow the transition function $\delta$ to be a partial function, notice that we demand that $\delta$ is total.
+Totality ensures that \iac{DFA} never gets stuck while reading an input symbol;
+this will be crucial for the correspondence between \ac{DFA} computations and cut reductions that we give in \cref{sec:curry-howard-dfas}.
+In demanding totality, there is no loss of expressiveness: one can always introduce a distinguished rejecting state that acts as a sink for any transitions that would have been left undefined under a partial transition function.
+
+% Notice our demand that the transition function $\delta$ be a total function.
+% Some definitions of \acp{DFA} allow transition functions to be partial functions, but notice that we demand the transition function be a total function.
+% In making this demand, there is no loss of expressiveness, however, because one may always introduce a sink state that is not accepting.
+
 \section{Conclusion}\label{sec:conclusion}
 
 \subparagraph*{Acknowledgements.}
