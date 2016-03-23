@@ -125,6 +125,21 @@
   \keyword_font:n { spawn } \mathpunct{} #1 \mathpunct{;} #2
 }
 
+\NewDocumentCommand \fwd { m m }
+  { \fwd:nn {#1} {#2} }
+\cs_new:Npn \fwd:nn #1#2 {
+  #1 \mathrel{ \fwd: } #2
+}
+\cs_new:Npn \fwd: { \mathord{ \leftrightarrow } }
+
+\NewDocumentCommand \call { >{ \SplitArgument{2}{<-} } m }
+  { \call:nnn #1 }
+\cs_new:Npn \call:nnn #1#2#3 {
+  #1 \shortleftarrow #2 \shortleftarrow #3
+}
+
+
+\NewDocumentCommand \case { m O{} m } { #1 . \case:Nnn {} {#2} {#3} }
 % \caseL[\Sigma]{\isym{a} => P_a | \isym{b} => P_b | \eow => Q}
 \NewDocumentCommand \caseL { O{} m } { \caseL:nn {#1} {#2} }
 \cs_new:Npn \caseL:nn #1#2 { \case:Nnn L {#1} {#2} }
@@ -144,12 +159,26 @@
 \cs_new:Npn \case_arm:w #1=>#2\q_stop { #1 \mathbin{\Rightarrow} #2 }
 
 % \selectR{\ell; P}
+\NewDocumentCommand \select { m >{ \SplitArgument{1}{;} } m }
+  { \select:nnn #1 #2 }
+\cs_new:Npn \select:nnn #1#2#3 { \keyword_font:n { select } \mathpunct{} #1 \mathpunct{} #2 \mathpunct{;} #3 }
 \NewDocumentCommand \selectR { >{ \SplitArgument{1}{;} } m }
   { \selectR:nn #1 }
 \cs_new:Npn \selectR:nn #1#2 { \select:Nnn R {#1} {#2} }
-\cs_new:Npn \select:Nnn #1#2#3 { \send:nnn { select#1 } {#2} {#3} }
-\cs_new:Npn \send:nnn #1#2#3 {  \keyword_font:n { #1 } \mathpunct{} #2 \mathpunct{;} #3 }
+\cs_new:Npn \select:Nnn #1#2#3 { \send:nnn { \keyword_font:n { select#1 } } {#2} {#3} }
 
+\NewDocumentCommand \send { m >{ \SplitArgument{1}{;} } m }
+  { \send:nnn { \keyword_font:n { send } \mathpunct{} #1 } #2 }
+\cs_new:Npn \send:nnn #1#2#3 { #1 \mathpunct{} #2 \mathpunct{;} #3 }
+\NewDocumentCommand \recv { m >{ \SplitArgument{1}{<-} } m }
+  { \recv:nnn { \keyword_font:n { recv } \mathpunct{} #1 } #2 }
+\cs_new:Npn \recv:nnn #1#2#3 { #2 \shortleftarrow #1 \mathpunct{;} #3 }
+
+
+\NewDocumentCommand \close { m } { \close:n {#1} }
+\cs_new:Npn \close:n #1 { \keyword_font:n { close } \mathpunct{} #1 }
+\NewDocumentCommand \wait { m m } { \wait:nn {#1} {#2} }
+\cs_new:Npn \wait:nn #1#2 { \keyword_font:n { wait } \mathpunct{} #1 \mathpunct{;} #2 }
 \NewDocumentCommand \closeR {} { \closeR: }
 \cs_new:Npn \closeR: { \keyword_font:n { closeR } }
 \NewDocumentCommand \waitL { m } { \waitL:n {#1} }

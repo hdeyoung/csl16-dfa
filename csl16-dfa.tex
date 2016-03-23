@@ -64,6 +64,69 @@ end;
 \end{lstlisting}
 
 
+\section{Intuitionistic linear logic with least fixed points}\label{sec:linear-logic}
+
+In this \lcnamecref{sec:linear-logic}, we describe a fragment of intuitionistic linear logic with least fixed points.
+Propositions are given by the grammar
+\begin{equation*}
+  A \Coloneqq \plus*[\ell \in L]{\ell{:}A_{\ell}} \mid A_1 \tensor A_2 \mid \one \mid \indtype{X.A} \mid X
+  \,,
+\end{equation*}
+where $\plus*[\ell \in L]{\ell{:}A_{\ell}}$ is a labeled $n$-ary additive disjunction over the set $L$ of labels, $A_1 \tensor A_2$ and $\one$ are multiplicative conjunction and its unit, and $\indtype{X.A}$ is the least fixed point that is the least solution to the equation $X = A$.
+Because all of the connectives in this fragment are covariant, notice that the least fixed points necessarily satisfy the standard strict positivity condition that guarantees well-definedness.
+% We enforce the standard strict positivity requirement on inductive types to ensure that they are well-defined.
+%
+As usual, contexts, $\lctx$, are finite multisets of propositions:
+\begin{equation*}
+  \lctx \Coloneqq \lctxe \mid \lctx, A
+  \,.
+\end{equation*}
+
+We use a sequent calculus presentation in which sequents have the form $\seq{\lctx |- A}$.
+The right and left introduction rules for $\plus$, $\tensor$, and $\one$, along with cut and identity rules are given in \cref{fig:linear-logic}.
+%
+\begin{figure}
+  \begin{mathpar}
+    \infer[{\jrule[_A]{CUT}}]{\seq{\lctx , \lctx' |- \spawn{P; Q} :: z:C}}{
+      \seq{\lctx |- P :: x:A} &
+      \seq{\lctx' , x:A |- Q :: z:C}}
+    \qquad
+    \infer[{\jrule[_A]{ID}}]{\seq{x:A |- \fwd{z}{x} :: z:A}}{
+      }
+    %
+    \\
+    %
+    \infer[\rrule{\plus}]{\seq{\lctx |- \select{x}{\kay; P} :: x:\plus*[\ell \in L]{\ell{:}A_{\ell}}}}{
+      \seq{\lctx |- P :: x:A_{\kay}} &
+      \text{($\kay \in L$)}}
+    \qquad
+    \infer[\lrule{\plus}]{\seq{\lctx' , x:\plus*[\ell \in L]{\ell{:}A_{\ell}} |- \case{x}[\ell \in L]{\ell => Q_{\ell}} :: z:C}}{
+      \forallseq{\ell \in L}{\seq{\lctx' , x:A_{\ell} |- Q_{\ell} :: z:C}}}
+    %
+    \\
+    %
+    \infer[\rrule{\tensor}]{\seq{\lctx_1 , \lctx_2 |- \send{x}{P_1; P_2} :: x:A_1 \tensor A_2}}{
+      \seq{\lctx_1 |- P_1 :: y:A_1} &
+      \seq{\lctx_2 |- P_2 :: x:A_2}}
+    \qquad
+    \infer[\lrule{\tensor}]{\seq{\lctx' , x:A_1 \tensor A_2 |- \recv{x}{y <- Q} :: z:C}}{
+      \seq{\lctx' , y:A_1 , x:A_2 |- Q :: z:C}}
+    %
+    \\
+    %
+    \infer[\rrule{\one}]{\seq{\lctxe |- \close{x} :: x:\one}}{
+      }
+    \qquad
+    \infer[\lrule{\one}]{\seq{\lctx' , x:\one |- \wait{x}{Q} :: z:C}}{
+      \seq{\lctx' |- Q :: z:C}}
+  \end{mathpar}
+  \caption{Inference rules for a sequent calculus presentation of a fragment of linear logic\label{fig:linear-logic}}
+\end{figure}
+%
+Rather than giving right and left introduction rules for $\mu$, it will be convenient to treat inductive types and their proofs \vocab{equi-recursively}.
+We will identify $\indtype{X.A}$ with its unrolling $[(\indtype{X.A})/X]A$, 
+
+
 \section{Proofs as \aclp*{DFA}}\label{sec:proofs-as-dfas}
 
 \subsection{\Aclp*{DFA}}\label{sec:dfas}
@@ -84,7 +147,6 @@ $M$ on the input string $w = a_1 a_2 \dotsb a_n \in \Sigma^*$
 is a sequence of states $q_0, q_1, \dots, q_n$ such that $\delta(q_i, a_{i+1}) = q_{i+1}$ for each $0 \leq i < n$.
 % The \ac{DFA}
 $M$ is said to \vocab{accept} string $w$ if there exists a computation on $w$ that ends in an accepting state, $q_n \in F$; otherwise, $M$ is said to \vocab{reject} string $w$.
-% That computation is an \vocab{accepting computation} if $q_n$ is an accepting state, \ie, if $q_n \in F$; otherwise it is a \vocab{rejecting computation}.
 
 Alternatively, one may extend the transition function $\delta$, which operates on symbols, to a function $\delta^*\colon Q \times \Sigma^* \to Q$, which operates on strings.
 % the lifting of the transition function $\delta$ from letters to words, by induction on the length of the input word:
