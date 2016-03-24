@@ -96,6 +96,14 @@ The right and left introduction rules for $\plus$, $\tensor$, and $\one$, along 
     %
     \\
     %
+    \infer[\rrule{\mu}]{\seq{\lctx |- {?} :: x:\indtype{X.A}}}{
+      \seq{\lctx |- P :: x:[(\indtype{X.A})/X]A}}
+    \qquad
+    \infer[\lrule{\mu}]{\seq{\lctx', x:\indtype{X.A} |- {?} :: z:C}}{
+      \seq{\lctx', x:[(\indtype{X.A})/X]A |- Q :: z:C}}
+    %
+    \\
+    %
     \infer[\rrule{\plus}]{\seq{\lctx |- \select{x}{\kay; P} :: x:\plus*[\ell \in L]{\ell{:}A_{\ell}}}}{
       \seq{\lctx |- P :: x:A_{\kay}} &
       \text{($\kay \in L$)}}
@@ -105,20 +113,20 @@ The right and left introduction rules for $\plus$, $\tensor$, and $\one$, along 
     %
     \\
     %
+    \infer[\rrule{\one}]{\seq{\lctxe |- \close{x} :: x:\one}}{
+      }
+    \qquad
+    \infer[\lrule{\one}]{\seq{\lctx' , x:\one |- \wait{x}{Q} :: z:C}}{
+      \seq{\lctx' |- Q :: z:C}}
+    %
+    \\
+    %
     \infer[\rrule{\tensor}]{\seq{\lctx_1 , \lctx_2 |- \send{x}{P_1; P_2} :: x:A_1 \tensor A_2}}{
       \seq{\lctx_1 |- P_1 :: y:A_1} &
       \seq{\lctx_2 |- P_2 :: x:A_2}}
     \qquad
     \infer[\lrule{\tensor}]{\seq{\lctx' , x:A_1 \tensor A_2 |- \recv{x}{y <- Q} :: z:C}}{
       \seq{\lctx' , y:A_1 , x:A_2 |- Q :: z:C}}
-    %
-    \\
-    %
-    \infer[\rrule{\one}]{\seq{\lctxe |- \close{x} :: x:\one}}{
-      }
-    \qquad
-    \infer[\lrule{\one}]{\seq{\lctx' , x:\one |- \wait{x}{Q} :: z:C}}{
-      \seq{\lctx' |- Q :: z:C}}
   \end{mathpar}
   \caption{Inference rules for a sequent calculus presentation of a fragment of linear logic\label{fig:linear-logic}}
 \end{figure}
@@ -266,28 +274,59 @@ This representation of strings as processes of a particular type is adequate:
     \pfwd{(\selectR{a ; P'})} = a \pfwd{(P')} \,,\, \text{if $a \neq \eow$}
     \,.
   \end{gather*}
-  To see that $\pfwd{{-}}$ is total, take an arbitrary % proof $P$ of $\seq{\lctxe |- \Tape[\Sigma]}$., that is, a 
-  process term $P$ such that $\aseq{\lctxe |- P : \Tape[\Sigma]}$ and consider its
-  % outermost constructor.
-  possible forms.
-  Unrolling the inductive type $\Tape[\Sigma]$, the process term $P$ is such that $\aseq{\lctxe |- P : \plus*[a \in \Sigma]{a{:}\Tape[\Sigma] , \eow{:}\one}}$.
-  Only the $\rrule{\plus}$ rule could possibly construct such a $P$.
-  Therefore, the proof term $P$ has one of two forms: either
+  To see that $\pfwd{{-}}$ is total, consider the possible forms of an arbitrary cut-free process term $P$ such that $\aseq{\lctxe |- P : \Tape[\Sigma]}$.
+  By inversion on the typing derivation, $P$ has one of two forms: either
   \begin{itemize}%[label=\itshape\arabic*)]
   \item $P = \selectR{a ; P'}$ for some $a \in \Sigma$ and some process $P'$ such that $\aseq{\lctxe |- P' : \Tape[\Sigma]}$; or
-  \item $P = \selectR{\eow ; P'}$ for some process term $P'$ such that $\aseq{\lctxe |- P' : \one}$.
+  \item $P = \selectR{\eow ; \closeR}$.
   \end{itemize}
-  The second form can be refined to $P = \selectR{\eow ; \closeR}$ because only the $\rrule{\one}$ rule can construct the requisite $P'$.
-  % a $P'$ such that $\aseq{\lctxe |- P' : \one}$.
-  The function $\pfwd{{-}}$ is total because it is defined for these two possible forms of $P$.
+  These are exactly the process terms for which $\pfwd{{-}}$ is defined, and so $\pfwd{{-}}$ is total.
 
-  It's easy to show that $\pfwd{{-}}$ is both a left and a right inverse of $\wdpf{{-}}$ and, consequently, that $\wdpf{{-}}$ is a bijection between strings over $\Sigma$ and proofs of $\seq{\lctxe |- P : \Tape[\Sigma]}$.
+  It's easy to show that $\pfwd{{-}}$ is both a left and a right inverse of $\strp{{-}}$.
+  Consequently, $\strp{{-}}$ is a bijection between strings over $\Sigma$ and processes of type $\seq{\lctxe |- \Tape[\Sigma]}$.
 \end{proof}
 
 \subsection{Encoding \acs*{DFA} states as proofs}
 
-As defined in \cref{sec:dfas}, the essence of \iac{DFA} is its transition function, $\delta\colon Q \times \Sigma \to Q$, which induces a function $\delta^*(q_0, {-})\colon \Sigma^* \to Q$ that can be used to characterize the language accepted by the \ac{DFA}.
-The transition function 
+As defined in \cref{sec:dfas}, the essence of \iac{DFA} is its transition function, $\delta\colon Q \times \Sigma \to Q$, which induces a function $\delta^*(q_0, {-})\colon \Sigma^* \to Q$ that can be used to characterize the language recognized by the \ac{DFA}.
+By partial function application, the transition function $\delta$ can also be thought of as a finite family of functions $\delta_q\colon \Sigma \to Q$, one for each state $q \in Q$.
+This alternative view suggests that the essence of a state $q$ lies in its contribution, $\delta_q$, to the overall transition function.
+
+\begin{theorem}\label{thm:dfa-sound}
+  Let $M = (Q, \Sigma, \delta, q_0, F)$.
+  \begin{itemize}
+  \item If $\delta(a_i, q) = q'$, then $\spawn{\strp{a_i w}; \dfap{q}} \reduces \dfap{q'}$ for all $w \in \Sigma^*$.
+  \item If $q \in F$, then $\spawn{\strp{\emp}; \dfap{q}} \reduces^2 \selectR{\acc; \closeR}$.
+  \item If $q \notin F$, then $\spawn{\strp{\emp}; \dfap{q}} \reduces^2 \selectR{\rej; \closeR}$.
+  \end{itemize}
+\end{theorem}
+\begin{proof}
+?
+\end{proof}
+
+\begin{corollary}\label{cor:dfa-sound}
+  If $\delta^*(q, w) \in F$, then $\spawn{\strp{w} ; \dfap{q}} \reduces^{\length{w}+2} \selectR{\acc ; \closeR}$, where $\length{w}$ is the length of $w$.
+  Otherwise, $\spawn{\strp{w} ; \dfap{q}} \reduces^{\length{w}+2} \selectR{\rej ; \closeR}$.
+\end{corollary}
+\begin{proof}
+  By induction on the length of $w$, appealing to \cref{thm:dfa-sound}.
+\end{proof}
+
+
+\subsection{}
+
+
+\begin{theorem}\label{thm:dfa-sound}
+  Let $M = (Q, \Sigma, \delta, q_0, F)$.
+  \begin{itemize}
+  \item If $\delta(a_i, q) = q'$, then $\spawn{\strp{a_i w}; \dfap{q}} \reduces \dfap{q'}$ for all $w \in \Sigma^*$.
+  \item If $q \in F$, then $\spawn{\strp{\emp}; \dfap{q}} \reduces^2 \selectR{\acc; \closeR}$.
+  \item If $q \notin F$, then $\spawn{\strp{\emp}; \dfap{q}} \reduces^2 \selectR{\rej; \closeR}$.
+  \end{itemize}
+\end{theorem}
+\begin{proof}
+?
+\end{proof}
 
 
 \section{Subtyping}

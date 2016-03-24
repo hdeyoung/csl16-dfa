@@ -23,6 +23,7 @@
 \ExplSyntaxOn
 
 
+\PassOptionsToPackage { capitalize } { cleveref }
 \RequirePackage { cleveref }
 
 
@@ -261,6 +262,9 @@
 
 \NewDocumentCommand \pfwd { m } { \pfwd:n {#1} }
 \cs_new:Npn \pfwd:n #1 { #1 ^{ \flat } }
+
+\NewDocumentCommand \dfap { m } { \dfap:n {#1} }
+\cs_new:Npn \dfap:n #1 { \strp:n {#1} }
 
 \NewDocumentCommand \dfapf { m } { \dfapf:n {#1} }
 \cs_new:Npn \dfapf:n #1 { \wdpf:n {#1} }
