@@ -148,13 +148,16 @@ is a sequence of states $q_0, q_1, \dots, q_n$ such that $\delta(q_i, a_{i+1}) =
 % The \ac{DFA}
 $M$ is said to \vocab{accept} string $w$ if there exists a computation on $w$ that ends in an accepting state, $q_n \in F$; otherwise, $M$ is said to \vocab{reject} string $w$.
 
-Alternatively, one may extend the transition function $\delta$, which operates on symbols, to a function $\delta^*\colon Q \times \Sigma^* \to Q$, which operates on strings.
+Alternatively, one may extend the transition function $\delta$, which operates on symbols, to a function $\delta^*\colon Q \times \Sigma^* \to Q$ that operates on strings.
 % the lifting of the transition function $\delta$ from letters to words, by induction on the length of the input word:
 \begin{align*}
   \delta^*(q, \emp) &= q \\
   \delta^*(q, a w') &= \delta^*(q', w') \text{\,, where $\delta(q, a) = q'$}
 \end{align*}
 It's straightforward to show, by induction on the length of the string $w$, that $M$ accepts $w$ if and only if $\delta^*(q_0, w) \in F$.
+
+Finally, the \vocab{language recognized} by $M$ is the set of all strings that are accepted by $M$.
+
 
 \begin{figure}
   \begin{tikzpicture}
@@ -202,6 +205,134 @@ In demanding totality, there is no loss of expressiveness: one can always introd
 % Notice our demand that the transition function $\delta$ be a total function.
 % Some definitions of \acp{DFA} allow transition functions to be partial functions, but notice that we demand the transition function be a total function.
 % In making this demand, there is no loss of expressiveness, however, because one may always introduce a sink state that is not accepting.
+
+
+\subsection{An adequate encoding of finite strings}
+
+% We will encode finite strings over the alphabet $\Sigma$ as proofs of 
+% %
+% Specifically, the encoding $\sp{}\colon \Sigma^* \to (\seq{\lctxe |- \Tape[\Sigma]})$ is defined inductively by
+% \begin{align*}
+%   \sp{\emp} &= \select{r}{\$; \close{r}} \\
+%   \sp{aw} &= \select{r}{a; \sp{w}}
+% \end{align*}
+
+Strings $w \in \Sigma^*$ are finite lists --- lists of symbols drawn from the finite alphabet $\Sigma$.
+In type theory, the type, $\List[\alpha]$, of finite lists with elements of type $\alpha$ is usually defined as the least solution of the type equation $X_\alpha = (\alpha \times X_\alpha) + \one$, or, when the type $\alpha$ is finitely inhabited, the isomorphic $X_\alpha = X_\alpha + \dots + X_\alpha + \one$.
+Finite lists are then values built inductively from the constructor $\mathsf{nil} : \one \to \List[\alpha]$ and the family of constructors $\mathsf{cons}_a : \List[\alpha] \to \List[\alpha]$, one for each value $a : \alpha$.
+
+By analogy, we will encode strings over $\Sigma$ as process terms of type $\seq{\lctxe |- \Tape[\Sigma]}$, where the type $\Tape[\Sigma]$ is the least solution of the equation
+\begin{equation*}
+  X = \plus*[a \in \Sigma \cup \{\eow\}]{a{:}A_a}
+  \quad\text{where}\quad
+  A_a = \begin{cases*}
+          X & if $a \in \Sigma$ \\
+          \one & if $a = \eow$
+        \end{cases*}
+\end{equation*}
+In other words, $\Tape[\Sigma]$ is the inductive type $\indtype{X.\, \plus*[a \in \Sigma \cup \{\eow\}]{a{:}A_a}}$.
+(From here on, we will indulge in a slight abuse of notation, writing $\plus*[a \in \Sigma]{a{:}A_a, \eow{:}A_{\eow}}$ instead of the more pedantic $\plus*[a \in \Sigma \cup \{\eow\}]{a{:}A_a}$.)
+
+Specifically, we define the encoding $\strp{{-}}\colon \Sigma^* \to (\seq{\lctxe |- \Tape[\Sigma]})$ inductively by
+\begin{align*}
+  \strp{\emp} &= \selectR{\eow ; \closeR} \\
+  \strp{a w'} &= \selectR{a ; \strp{w'}}
+  \,.
+\end{align*}
+In this way, the process term $\selectR{\eow ; \closeR}$ is rather like $\mathsf{nil}$, marking the end of the list, and $\selectR{a ; {-}}$ is rather like $\mathsf{cons}_a$.
+For example, with the alphabet $\{\isym{a} , \isym{b}\}$, the word $\isym{b} \isym{a}$ is represented by the proof $\strp{\isym{b} \isym{a}} = \selectR{\isym{b} ; \selectR{\isym{a} ; \selectR{\eow ; \closeR}}}$.
+
+% In a similar way, we will represent words over $\Sigma$ as proofs of $\seq{\lctxe |- \Tape[\Sigma]}$ where $\Tape[\Sigma]$ is the least solution of the type equation $X = \plus*[a \in \Sigma \cup \{\eow\}]{a{:}A_a}$ with $A_a = X$ if $a \in \Sigma$ and $A_{\eow} = \one$.
+% , namely the inductive type $\indtype{X.\, \plus*[a \in \Sigma]{a{:}X , \eow{:}\one}}$.
+% Specifically, we represent word $w \in \Sigma^*$ as $\wdpf{w}$, where $\wdpf{{-}}$ is the least function satisfying
+% \begin{align*}
+%   \wdpf{(\emp)} &= \selectR{\eow ; \closeR} \\
+%   \wdpf{(a w')} &= \selectR{a ; \wdpf{(w')}}
+%   \,.
+% \end{align*}
+% For example, if $\Sigma = \{\isym{0} , \isym{1}\}$, then the word $\isym{1} \isym{0}$ is represented by $\wdpf{(\isym{1} \isym{0})} = \selectR{\isym{1} ; \selectR{\isym{0} ; \selectR{\eow ; \closeR}}}$
+
+
+This representation of strings as processes of a particular type is adequate:
+\begin{theorem}
+  Strings over the alphabet $\Sigma$ are in bijective correspondence with cut-free processes of type $\seq{\lctxe |- \Tape[\Sigma]}$.
+  % The representation function $\wdpf{{-}}$ is a bijection.
+\end{theorem}
+\begin{proof}
+  Define a total function $\pfwd{{-}}$ from processes of type $\seq{\lctxe |- \Tape[\Sigma]}$ to strings over % the alphabet
+  $\Sigma$:
+  \begin{gather*}
+    \pfwd{(\selectR{\eow ; \closeR})} = \emp \\
+    \pfwd{(\selectR{a ; P'})} = a \pfwd{(P')} \,,\, \text{if $a \neq \eow$}
+    \,.
+  \end{gather*}
+  To see that $\pfwd{{-}}$ is total, take an arbitrary % proof $P$ of $\seq{\lctxe |- \Tape[\Sigma]}$., that is, a 
+  process term $P$ such that $\aseq{\lctxe |- P : \Tape[\Sigma]}$ and consider its
+  % outermost constructor.
+  possible forms.
+  Unrolling the inductive type $\Tape[\Sigma]$, the process term $P$ is such that $\aseq{\lctxe |- P : \plus*[a \in \Sigma]{a{:}\Tape[\Sigma] , \eow{:}\one}}$.
+  Only the $\rrule{\plus}$ rule could possibly construct such a $P$.
+  Therefore, the proof term $P$ has one of two forms: either
+  \begin{itemize}%[label=\itshape\arabic*)]
+  \item $P = \selectR{a ; P'}$ for some $a \in \Sigma$ and some process $P'$ such that $\aseq{\lctxe |- P' : \Tape[\Sigma]}$; or
+  \item $P = \selectR{\eow ; P'}$ for some process term $P'$ such that $\aseq{\lctxe |- P' : \one}$.
+  \end{itemize}
+  The second form can be refined to $P = \selectR{\eow ; \closeR}$ because only the $\rrule{\one}$ rule can construct the requisite $P'$.
+  % a $P'$ such that $\aseq{\lctxe |- P' : \one}$.
+  The function $\pfwd{{-}}$ is total because it is defined for these two possible forms of $P$.
+
+  It's easy to show that $\pfwd{{-}}$ is both a left and a right inverse of $\wdpf{{-}}$ and, consequently, that $\wdpf{{-}}$ is a bijection between strings over $\Sigma$ and proofs of $\seq{\lctxe |- P : \Tape[\Sigma]}$.
+\end{proof}
+
+\subsection{Encoding \acs*{DFA} states as proofs}
+
+As defined in \cref{sec:dfas}, the essence of \iac{DFA} is its transition function, $\delta\colon Q \times \Sigma \to Q$, which induces a function $\delta^*(q_0, {-})\colon \Sigma^* \to Q$ that can be used to characterize the language accepted by the \ac{DFA}.
+The transition function 
+
+
+\section{Subtyping}
+
+\begin{equation*}
+  \seq{\Tape[\Sigma] |- even : \Ans}
+\end{equation*}
+
+\begin{align*}
+  \EvenB &= \plus*{a:\EvenB , b: \OddB , \eow: \one} \\
+   \OddB &= \plus*{a: \OddB , b:\EvenB             }
+\end{align*}
+
+
+\begin{align*}
+  \lnot (\plus*[a \in \Sigma]{a: A_a , \eow: \one})
+    &= \plus*[a \in \Sigma]{a: \lnot A_a}
+  \\
+  \lnot (\plus*[a \in \Sigma]{a: A_a})
+    &= \plus*[a \in \Sigma]{a: \lnot A_a , \eow: \one}
+  \\
+  \lnot (\indtype{X.A})
+    &= \indtype{\overline{X}.\, \lnot A}
+  \\
+  \lnot X &= \overline{X}
+\end{align*}
+
+
+\section{Closure properties by cut elimination}
+
+\begin{align*}
+  \MoveEqLeft[1]
+  \spawn{q; not} \\
+    &= \spawn{(\caseL[a \in \Sigma]{a => q_a | \eow => \waitL{\selectR{F(q); \closeR}}});
+              not} \\
+    &\reduces \caseL[a \in \Sigma]{a => \spawn{q_a; not} | \eow => \spawn{(\waitL{\selectR{F(q); \closeR}}); not}} \\
+    &\reduces \caseL[a \in \Sigma]{a => \spawn{q_a; not} | \eow => \waitL{(\spawn{(\selectR{F(q); \closeR}); not})}} \\
+    &= \caseL[a \in \Sigma]{a => \spawn{q_a; not} | \eow => \waitL{(\spawn{(\selectR{F(q); \closeR}); (\caseL{\acc => \waitL{\selectR{\rej; \closeR}} | \rej => \waitL{\selectR{\acc; \closeR}}})})}} \\
+    &\reduces \caseL[a \in \Sigma]{a => \spawn{q_a; not} | \eow => \waitL{(\spawn{(\selectR{F(q); \closeR}); (\caseL{\acc => \waitL{\selectR{\rej; \closeR}} | \rej => \waitL{\selectR{\acc; \closeR}}})})}}
+\end{align*}
+
+
+\section{Subsequential transducers}
+
+
 
 \section{Conclusion}\label{sec:conclusion}
 

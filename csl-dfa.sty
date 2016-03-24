@@ -256,6 +256,9 @@
 \NewDocumentCommand \wdpf { m } { \wdpf:n {#1} }
 \cs_new:Npn \wdpf:n #1 { #1 ^{ \sharp } }
 
+\NewDocumentCommand \strp { m } { \strp:n {#1} }
+\cs_new:Npn \strp:n #1 { \llbracket #1\rrbracket }
+
 \NewDocumentCommand \pfwd { m } { \pfwd:n {#1} }
 \cs_new:Npn \pfwd:n #1 { #1 ^{ \flat } }
 
@@ -271,3 +274,10 @@
 
 \NewDocumentCommand \ffbool { } { \ffbool: }
 \cs_new:Npn \ffbool: { \keyword_font:n { false } }
+
+
+\NewDocumentCommand \EvenB { } { \EvenB: }
+\cs_new:Npn \EvenB: { \mathtt { EvenB } }
+
+\NewDocumentCommand \OddB { } { \OddB: }
+\cs_new:Npn \OddB: { \mathtt { OddB } }
